@@ -171,3 +171,271 @@ plt.title('Confusion Matrix - KNN')
 plt.show()
 ```
 <img width="640" height="547" alt="image" src="https://github.com/user-attachments/assets/7471c433-a8d5-4932-be8b-ea9410a22e2c" />
+
+# Logistic Regression
+Pada tahap ini dilakukan pembuatan model klasifikasi menggunakan `Logistic Regression`. Model ini digunakan untuk memprediksi kelas `quality` berdasarkan hubungan antara fitur-fitur kimia wine dengan target yang tersedia pada dataset training. Model ini dibuat menggunakan parameter `max_iter=1000` agar proses pelatihan memiliki jumlah iterasi yang cukup sehingga model dapat mencapai kondisi konvergen secara optimal. Setelah model dilatih menggunakan data tarining yang telah melalui proses _feature scalling_, model kemudia digunakan untuk memprediksi data validation. Hasil prediksi tersebut dievaluasi menggunakan `accuracy_score` dan `classification_report` untuk mengetahui performa model.
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+lr = LogisticRegression(max_iter=1000)
+
+lr.fit(x_train_scaled, y_train)
+
+y_pred_lr = lr.predict(x_val_scaled)
+
+print("Akurasi Logistic Regression:", accuracy_score(y_val, y_pred_lr))
+print(classification_report(y_val, y_pred_lr))
+```
+Berdasarkan hasil evaluasi, model Logistic Regression memperoleh nilai akurasi sebesar 0.6104 atau 61.04% pada data validatiom. Nilai ini menunjukkan bahwa model mampu melakukan klasifikasi dengan cukup baik, meskipun performanya masih belum optimal. Model menunjukkan performa terbaik pada kelas 5 dengan nilai prediction sebesar 0.69, recall sebesar 0.73, dan f1-score sebesar 0.71. Sedangkan pada kelas 6, diperoleh nilai f1-score sebesar 0.58 dan pada kelas 7 sebesar 0.53. Hal ini menunjukkan bahwa model cukup mampu mengenali kelas mayoritas pada dataset. Namun, model tidak berhasil memprediksi kelas 3, 4, dan 8, yang terlihat dari nilai precision, recall, dan f1-score sebesar 0.00. Kondisi ini terjadi karena jumlah data pada kelas tersebut sangat sedikit dibandingkan kelas lainnya, sehingga model kesulitan mempelajari pola dari kelas minoritas.
+
+kelas mayoritas seperti 5 dan 6, namun masih kurang optimal dalam menangani distribusi data yang tidak seimbang _(imbalanced dataset)_.
+
+Tahap selanjutnya adalah evaluasi model Logistic Regression menggunakan _confusion matrix_ untuk melihat hasil klasifikasi model secara lebih detail pada setiap kelas  `quality`. Confusion matrix digunakan untuk membandingkan antara kelas aktual dengan kelas hasil prediksi model.
+```python
+cm_lr = confusion_matrix(y_val, y_pred_lr)
+
+print("Confusion Matrix Logistic Regression:")
+print(cm_lr)
+```
+Berdasarkan hasil _confusion matrix_, diperoleh pada baris menunjukkan kelas aktual, sedangkan kolom menunjukkan hasil prediksi model. Nilai pada diagonal utama menunjukkan jumlah data yang berhasil diprediksi dengan benar oleh model. Pada kelas 5, model berhasil memprediksi 53 data dengan benar, namun masih terdapat beberapa data yang salah diprediksi sebagai kelas 4 dan 6. Pada kelas 6, terdapat 40 data yang berhasil diprediksi dengan benar, tetapi beberapa data masih salah diprediksi sebagai kelas 5 dan 7. Pada kelas 7, model berhasil memprediksi 12 data dengan benar, namun masih terdapat data yang salah diklasifikasikan ke kelas 6. Sedangkan pada kelas 3, 4, dan 8, model belum mampu melakukan klasifikasi dengan baik karena jumlah data pada kelas tersebut sangat sedikit. Akibatnya, model lebih cenderung memprediksi ke kelas mayoritas seperti 5 dan 6.
+
+Secara keseluruhan, confusion matrix menunjukkan bahwa model Logistic Regression cukup baik dalam mengenali kelas mayoritas, namun masih mengalami kesalahan klasifikasi pada beberapa kelas dan kurang optimal dalam menangani data dengan distribusi kelas yang tidak seimbang.
+
+Pada tahap ini dilakukan visualisasi confusion matrix menggunakan `heatmap` dari library `seaborn`. Visualisasi ini bertujuan untuk mempermudah dalam melihat performa model Logistic Regression pada setiap kelas `quality`. Fungsi `sns.heatmap()` digunakan untuk menampilkan confusion matrix dalam bentuk warna sehingga hasil prediksi benar dan kesalahan klasifikasi dapat terlihat dengan lebih jelas. Parameter `annot=True` digunakan untuk menampilkan nilai pada setiap sel, sedangkan `fmt='d'` digunakan agar data ditampilkan dalam format bilangan bulat.Selain itu, parameter `cmap='Reds'` digunakan untuk memberikan gradasi warna merah pada heatmap sehingga visualisasi menjadi lebih mudah dibaca. Label `Predicted Label` menunjukkan hasil prediksi model, sedangkan `Actual Label` menunjukkan kelas sebenarnya dari data.
+```python
+plt.figure(figsize=(8,6))
+sns.heatmap(cm_lr, annot=True, fmt='d', cmap='Reds')
+
+plt.xlabel('Predicted Label')
+plt.ylabel('Actual Label')
+plt.title('Confusion Matrix - Logistic Regression')
+
+plt.show()
+```
+<img width="640" height="547" alt="image" src="https://github.com/user-attachments/assets/1be45c11-22be-4910-a13d-5e8b28832202" />
+
+# Support Vector Machine (SVM)
+Pada tahap ini digunakan algoritma Support Vector Machine (SVM) untuk membangun model klasifikasi kualitas wine. SVM merupakan algoritma machine learning yang bekerja dengan mencari hyperplane terbaik untuk memisahkan setiap kelas data sehingga proses klasifikasi dapat dilakukan dengan lebih optimal. Model dibuat menggunakan parameter `kernel='rbf'` _(Radial Basis Function)_. Kernel ini digunakan untuk menangani hubungan data yang bersifat non-linear sehingga model dapat mempelajari pola data yang lebih kompleks. Selanjutnya, model dilatih menggunakan data training yang telah melalui proses feature scaling, yaitu `x_train_scaled` dan `y_train`. Setelah proses training selesai, model digunakan untuk memprediksi data validation `x_val_scaled` dan hasil prediksi disimpan dalam variabel `y_pred_svm`. Untuk mengetahui performa model, dilakukan evaluasi menggunakan `accuracy_score` dan `classification_report`.
+``` python
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+svm = SVC(kernel='rbf')
+
+svm.fit(x_train_scaled, y_train)
+
+y_pred_svm = svm.predict(x_val_scaled)
+
+print("Akurasi SVM:", accuracy_score(y_val, y_pred_svm))
+print(classification_report(y_val, y_pred_svm))
+```
+Berdasarkan hasil evaluasi, model SVM memperoleh nilai akurasi sebesar 0.6337 atau sekitar 63.37% pada data validation. Nilai ini menunjukkan bahwa model mampu melakukan klasifikasi dengan cukup baik. Model menunjukkan performa terbaik pada kelas 5 dengan nilai precision sebesar 0.70, recall sebesaar 0.78, dan f1-score sebesar 0.74. Sedangkan pada kelas 6, model memperoleh nilai f1-score sebesar 0.61, dan pada kelas 7 sebesar 0.46. Hal ini menunjukkan bahwa model cukup baik dalam mengenali kelas mayoritas pada dataset. Namun, model belum mampu memprediksi kelas 3, 4, dan 8, yang terlihat dari nilai precision, recall, dan f1-score sebesar 0.00. Kondisi ini terjadi karena jumlah data pada kelas tersebut sangat sedikit dibandingkan kelas lainnya sehingga model kesulitan mempelajari pola pada kelas minoritas.
+
+Secara keseluruhan, model SVM memiliki performa yang cukup baik dan sedikit lebih unggul dibanding Logistic Regression, terutama dalam memprediksi kelas mayoritas seperti 5 dan 6. Namun, model masih kurang optimal dalam menangani distribusi data yang tidak seimbang _(imbalanced dataset)_.
+
+Pada tahap ini dilakukan evaluasi model Support Vector Machine (SVM) menggunakan confusion matrix untuk melihat hasil klasifikasi model secara lebih detail pada setiap kelas `quality`. _Confusion matrix_ digunakan untuk membandingkan antara kelas aktual dengan kelas hasil prediksi model.
+```python
+cm_svm = confusion_matrix(y_val, y_pred_svm)
+
+print("Confusion Matrix SVM:")
+print(cm_svm)
+```
+Baris pada confusion matrix menunjukkan kelas aktual, sedangkan kolom menunjukkan hasil prediksi model. Nilai pada diagonal utama menunjukkan jumlah data yang berhasil diprediksi dengan benar oleh model. Pada kelas 5, model berhasil memprediksi 57 data dengan benar, namun masih terdapat beberapa data yang salah diprediksi sebagai kelas 6. Pada kelas 6, terdapat 43 data yang berhasil diprediksi dengan benar, tetapi beberapa data masih salah diprediksi sebagai kelas 5 dan 7. Pada kelas 7, model berhasil memprediksi 9 data dengan benar, namun masih terdapat beberapa data yang salah diprediksi ke kelas 6.
+
+Secara keseluruhan, _confusion matrix_ menunjukkan bahwa model SVM cukup baik dalam mengenali kelas mayoritas dan memiliki performa yang cukup stabil. Namun, model masih mengalami kesalahan klasifikasi pada beberapa kelas dan kurang optimal dalam menangani data dengan distribusi kelas yang tidak seimbang.
+
+Pada tahap ini dilakukan visualisasi confusion matrix dari model Support Vector Machine (SVM) menggunakan `heatmap` dari library `seaborn`. Visualisasi ini bertujuan untuk mempermudah dalam melihat hasil klasifikasi model pada setiap kelas `quality`. Fungsi `sns.heatmap()` digunakan untuk menampilkan _confusion matrix_ dalam bentuk warna sehingga hasil prediksi benar dan kesalahan klasifikasi dapat terlihat lebih jelas. Parameter `annot=True` digunakan agar nilai pada setiap sel ditampilkan, sedangkan `fmt='d'` digunakan untuk menampilkan data dalam format bilangan bulat. Selain itu, parameter `cmap='Blues'` digunakan untuk memberikan gradasi warna biru pada heatmap sehingga visualisasi menjadi lebih mudah dibaca. Label `Predicted Label` menunjukkan hasil prediksi model, sedangkan `Actual Label` menunjukkan kelas sebenarnya dari data.
+<img width="640" height="547" alt="image" src="https://github.com/user-attachments/assets/c0d0a94c-2976-4656-8395-bb7bba7e4039" />
+
+# Random Forest
+Pada tahap ini digunakan algoritma `RandomForestClassifier` untuk membangun model klasifikasi kualitas wine. Random Forest merupakan algoritma machine learning berbasis _decision tree_ yang bekerja dengan menggabungkan banyak pohon keputusan _(tree)_ untuk menghasilkan prediksi yang lebih akurat dan stabil. Model dibuat menggunakan parameter `n_estimators=100`, yang berarti model akan membangun 100 _decision tree_ dalam proses pelatihan. Selain itu, parameter `random_state=42` digunakan agar hasil model tetap konsisten setiap kali program dijalankan. Selanjutnya, model dilatih menggunakan data training yang telah melalui proses feature scaling, yaitu `x_train_scaled` dan `y_train`. Setelah proses training selesai, model digunakan untuk memprediksi data validation `x_val_scaled` dan hasil prediksi disimpan dalam variabel `y_pred_rf`. Untuk mengetahui performa model, dilakukan evaluasi menggunakan `accuracy_score` dan `classification_report`.
+```python
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+rf = RandomForestClassifier(n_estimators=100, random_state=42)
+
+rf.fit(x_train_scaled, y_train)
+
+y_pred_rf = rf.predict(x_val_scaled)
+
+print("Akurasi Random Forest:", accuracy_score(y_val, y_pred_rf))
+print(classification_report(y_val, y_pred_rf))
+```
+Berdasarkan hasil evaluasi, model Random Forest memperoleh nilai akurasi sebesar 0.8721 atau sekitar 87.21% pada data validation. Nilai ini menunjukkan bahwa model memiliki performa yang sangat baik dalam melakukan klasifikasi kualitas wine dibandingkan model sebelumnya. Model menunjukkan performa yang tinggi pada hampir seluruh kelas `quality`. Pada kelas 5, model memperoleh nilai precision 0.87, recall 0.90, dan f1-score 0.89. Pada kelas 6, model memperoleh f1-score sebesar 0.85. Pada kelas 7, model memperoleh f1-score sebesar 0.89. Selain itu, model juga mampu memprediksi kelas minoritas seperti 3, 4, dan 8 dengan cukup baik, yang terlihat dari nilai precision dan recall yang tinggi pada kelas tersebut. Nilai _macro average_ sebesar 0.89 dan _weighted average_ sebesar 0.87 menunjukkan bahwa model memiliki performa yang stabil dan seimbang pada seluruh kelas. 
+
+Secara keseluruhan, Random Forest menjadi model dengan performa terbaik dibandingkan algoritma sebelumnya karena mampu menghasilkan akurasi tinggi dan menangani distribusi kelas dengan lebih baik.
+
+Pada tahap ini dilakukan evaluasi model Random Forest menggunakan _confusion matrix_ untuk melihat hasil klasifikasi model secara lebih detail pada setiap kelas `quality`. _Confusion matrix` digunakan untuk membandingkan antara kelas aktual dengan hasil prediksi model.
+```python
+cm_rf = confusion_matrix(y_val, y_pred_rf)
+
+print("Confusion Matrix Random Forest:")
+print(cm_rf)
+```
+Baris pada confusion matrix menunjukkan kelas aktual, sedangkan kolom menunjukkan hasil prediksi model. Nilai pada diagonal utama menunjukkan jumlah data yang berhasil diprediksi dengan benar oleh model. Berdasarkan hasil confusion matrix, terlihat bahwa model Random Forest mampu melakukan klasifikasi dengan cukup baik pada sebagian besar kelas `quality`. Pada kelas 5, sebagian besar data berhasil diprediksi dengan benar, meskipun masih terdapat beberapa data yang salah diprediksi ke kelas lain. Pada kelas 6, model berhasil memprediksi 57 data dengan benar, namun masih terdapat beberapa data yang salah diprediksi sebagai kelas 5 dan 7. Pada kelas 7, terdapat 20 data yang berhasil diprediksi dengan benar, menunjukkan performa model yang cukup baik pada kelas tersebut. Selain itu, jumlah kesalahan klasifikasi pada model Random Forest relatif lebih sedikit dibandingkan model sebelumnya seperti KNN, Logistic Regression, dan SVM. Hal ini menunjukkan bahwa Random Forest memiliki kemampuan yang lebih baik dalam mempelajari pola data dan menangani distribusi kelas yang berbeda-beda.
+
+Secara keseluruhan, confusion matrix menunjukkan bahwa model Random Forest memiliki performa klasifikasi yang baik dan mampu menghasilkan prediksi yang lebih akurat dibandingkan algoritma lainnya.
+
+Pada tahap ini dilakukan visualisasi confusion matrix dari model Random Forest menggunakan `heatmap` dari library `seaborn`. Visualisasi ini bertujuan untuk mempermudah dalam melihat performa model pada setiap kelas `quality`. Variabel labels digunakan untuk mengambil dan mengurutkan seluruh kelas unik pada target `quality`. Selanjutnya, _confusion matrix_ divisualisasikan menggunakan fungsi `sns.heatmap()` sehingga hasil klasifikasi dapat ditampilkan dalam bentuk warna dan angka yang lebih mudah dipahami. Parameter `annot=True` digunakan agar nilai pada setiap sel ditampilkan, sedangkan `fmt='d'` digunakan untuk menampilkan data dalam format bilangan bulat. Selain itu, parameter `cmap='Oranges'` digunakan untuk memberikan gradasi warna oranye pada heatmap sehingga visualisasi menjadi lebih jelas dan menarik. Label `Predicted Label` menunjukkan hasil prediksi model, sedangkan `Actual Label` menunjukkan kelas sebenarnya dari data.
+
+<img width="640" height="547" alt="image" src="https://github.com/user-attachments/assets/5360aaec-aafe-4066-b7f6-5946524b9c7a" />
+
+# Decision Tree
+Pada tahap ini digunakan algoritma  `DecisionTreeClassifier` untuk membangun model klasifikasi kualitas wine. Decision Tree merupakan algoritma machine learning yang bekerja dengan membentuk struktur pohon keputusan berdasarkan fitur-fitur pada dataset untuk menentukan hasil klasifikasi. Model dibuat menggunakan parameter  `random_state=42` agar hasil pelatihan model tetap konsisten setiap kali program dijalankan. Selanjutnya, model dilatih menggunakan data training `x_train` dan `y_train`. Setelah proses training selesai, model digunakan untuk memprediksi data validation `x_val` dan hasil prediksi disimpan dalam variabel `y_pred_dt`. Untuk mengetahui performa model, dilakukan evaluasi menggunakan `accuracy_score` dan `classification_report`.
+```python
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+dt = DecisionTreeClassifier(random_state=42)
+
+dt.fit(x_train, y_train)
+
+y_pred_dt = dt.predict(x_val)
+
+print("Akurasi Decision Tree:", accuracy_score(y_val, y_pred_dt))
+print(classification_report(y_val, y_pred_dt))
+```
+Berdasarkan hasil evaluasi, model Decision Tree memperoleh nilai akurasi sebesar 0.8547 atau sekitar 85.47% pada data validation. Nilai ini menunjukkan bahwa model memiliki performa yang sangat baik dalam melakukan klasifikasi kualitas wine. Model menunjukkan performa yang cukup tinggi pada hampir seluruh kelas `quality`. Pada kelas 5, model memperoleh nilai precision 0.90, recall 0.85, dan f1-score 0.87. Pada kelas 6, model memperoleh f1-score sebesar 0.85. Pada kelas 7, model memperoleh f1-score sebesar 0.88, yang menunjukkan bahwa model sangat baik dalam mengenali kelas tersebut. Selain itu, model juga mampu memprediksi kelas minoritas seperti 3, 4, dan 8 dengan cukup baik dibandingkan beberapa model sebelumnya. Nilai weighted average f1-score sebesar 0.86 menunjukkan bahwa model memiliki performa klasifikasi yang stabil pada seluruh kelas.
+
+Secara keseluruhan, Decision Tree menjadi salah satu model dengan performa terbaik pada proyek ini karena mampu menghasilkan akurasi tinggi dan menangani data klasifikasi dengan cukup baik.
+
+Pada tahap ini dilakukan evaluasi model Decision Tree menggunakan _confusion matrix_ untuk melihat hasil klasifikasi model secara lebih detail pada setiap kelas `quality`. _Confusion matrix_ digunakan untuk membandingkan antara kelas aktual dengan hasil prediksi model.
+```python
+cm_dt = confusion_matrix(y_val, y_pred_dt)
+
+print("Confusion Matrix Decision Tree:")
+print(cm_dt)
+```
+Baris pada confusion matrix menunjukkan kelas aktual, sedangkan kolom menunjukkan hasil prediksi model. Nilai pada diagonal utama menunjukkan jumlah data yang berhasil diprediksi dengan benar oleh model. Pada kelas 3, model berhasil memprediksi 1 data dengan benar tanpa kesalahan klasifikasi. Pada kelas 4, terdapat 4 data yang berhasil diprediksi dengan benar, namun masih terdapat 1 data yang salah diprediksi sebagai kelas 8. Pada kelas 5, model berhasil memprediksi 62 data dengan benar, meskipun masih terdapat beberapa data yang salah diprediksi ke kelas 4, 6, dan 7. Pada kelas 6, terdapat 57 data yang berhasil diprediksi dengan benar, sedangkan beberapa data masih salah diprediksi sebagai kelas lain. Pada kelas 7, model berhasil memprediksi 21 data dengan benar dan hanya sedikit kesalahan klasifikasi. Pada kelas 8, terdapat 2 data yang berhasil diprediksi dengan benar dan 1 data salah diprediksi sebagai kelas 7.
+
+Secara keseluruhan, _confusion matrix_ menunjukkan bahwa model Decision Tree memiliki performa yang baik dalam mengenali sebagian besar kelas  `quality`. Sebagian besar nilai berada pada diagonal utama, yang menandakan bahwa model mampu melakukan klasifikasi dengan cukup akurat. Namun, masih terdapat beberapa kesalahan prediksi terutama pada kelas yang memiliki karakteristik yang mirip satu sama lain.
+
+Pada tahap ini dilakukan visualisasi confusion matrix dari model Decision Tree menggunakan `heatmap` dari library `seaborn`. Visualisasi ini bertujuan untuk mempermudah dalam melihat performa model pada setiap kelas `quality`. Fungsi `sns.heatmap()` digunakan untuk menampilkan _confusion matrix_ dalam bentuk warna sehingga hasil klasifikasi benar dan kesalahan prediksi dapat terlihat lebih jelas. Parameter `annot=True` digunakan agar nilai pada setiap sel ditampilkan, sedangkan `fmt='d'` digunakan untuk menampilkan data dalam format bilangan bulat. Selain itu, parameter `cmap='Greens'` digunakan untuk memberikan gradasi warna hijau pada heatmap sehingga visualisasi menjadi lebih mudah dibaca. Label `Predicted Label` menunjukkan hasil prediksi model, sedangkan `Actual Label` menunjukkan kelas sebenarnya dari data.
+<img width="640" height="547" alt="image" src="https://github.com/user-attachments/assets/0ec0d340-7b86-464b-8f1f-5849e2b69345" />
+```python
+plt.figure(figsize=(8,6))
+
+sns.heatmap(cm_dt, annot=True, fmt='d', cmap='Greens')
+
+plt.xlabel('Predicted Label')
+plt.ylabel('Actual Label')
+plt.title('Confusion Matrix - Decision Tree')
+
+plt.show()
+```
+
+Pada tahap ini dilakukan visualisasi struktur pohon keputusan _(decision tree)_ dari model `DecisionTreeClassifier` menggunakan fungsi `plot_tree()` dari `scikit-learn`. Visualisasi ini bertujuan untuk melihat bagaimana model mengambil keputusan dalam proses klasifikasi kualitas wine berdasarkan fitur-fitur yang tersedia. Fungsi `dt.fit(x_train, y_train)` digunakan untuk melatih model Decision Tree menggunakan data training. Selanjutnya, fungsi `plot_tree()` digunakan untuk menampilkan struktur pohon keputusan secara visual. Parameter `filled=True` digunakan agar setiap node pada pohon memiliki warna yang berbeda sesuai dengan kelas dominan pada node tersebut, sehingga visualisasi menjadi lebih mudah dipahami. Selain itu, ukuran gambar diperbesar menggunakan `figsize=(75,50)` agar struktur pohon dapat terlihat dengan lebih jelas karena jumlah node yang cukup banyak.
+<img width="5832" height="3870" alt="image" src="https://github.com/user-attachments/assets/47434ca2-260d-4eba-b7fd-134260a0f451" />
+
+# Membanding Akurasi Model
+Pada tahap ini dilakukan perbandingan performa beberapa algoritma _machine learning_ yang telah digunakan pada proses klasifikasi kualitas wine. Perbandingan dilakukan dengan menghitung nilai akurasi dari masing-masing model menggunakan fungsi `accuracy_score()`.
+
+Nilai akurasi dari setiap model kemudian disimpan ke dalam variabel:
+`akurasi_lr` untuk Logistic Regression
+`akurasi_knn` untuk KNN
+`akurasi_svm` untuk SVM
+`akurasi_rf` untuk Random Forest
+`akurasi_dt` untuk Decision Tree
+
+Selanjutnya, seluruh hasil akurasi digabungkan ke dalam sebuah `DataFrame` bernama `hasil_model` agar lebih mudah dibandingkan dan dianalisis.
+```python
+akurasi_lr = accuracy_score(y_val, y_pred_lr)
+akurasi_knn = accuracy_score(y_val, y_pred_knn)
+akurasi_svm = accuracy_score(y_val, y_pred_svm)
+akurasi_rf = accuracy_score(y_val, y_pred_rf)
+akurasi_dt = accuracy_score(y_val, y_pred_dt)
+
+hasil_model = pd.DataFrame({
+    'Model': ['Logistic Regression', 'KNN', 'SVM', 'Random Forest', 'Decision Tree'],
+    'Akurasi': [akurasi_lr, akurasi_knn, akurasi_svm, akurasi_rf, akurasi_dt]
+})
+
+hasil_model
+```
+## 📊 Perbandingan Akurasi Model
+
+| No | Model                  | Akurasi |
+|----|------------------------|----------|
+| 1  | Logistic Regression    | 0.6105 |
+| 2  | KNN                    | 0.6395 |
+| 3  | SVM                    | 0.6337 |
+| 4  | Random Forest          | 0.8721 |
+| 5  | Decision Tree          | 0.8547 |
+
+Berdasarkan tabel di atas, model Random Forest memperoleh nilai akurasi tertinggi yaitu sekitar 87.21%, sehingga menjadi model dengan performa terbaik pada proyek ini. Model ini mampu melakukan klasifikasi dengan lebih baik dibandingkan algoritma lainnya karena dapat menangani pola data yang kompleks dan mengurangi risiko overfitting melalui penggunaan banyak decision tree. Model Decision Tree juga menunjukkan performa yang sangat baik dengan akurasi sekitar 85.47%. Sementara itu, model KNN, SVM, dan Logistic Regression memiliki akurasi yang lebih rendah, yaitu berada pada rentang 61%–64%.
+
+Secara keseluruhan, hasil evaluasi menunjukkan bahwa algoritma berbasis pohon keputusan seperti Random Forest dan Decision Tree lebih efektif digunakan pada dataset klasifikasi kualitas wine dibandingkan algoritma lainnya pada proyek ini.
+
+# Menggunakan Random Forest
+Pada tahap ini dipilih algoritma `RandomForestClassifier` sebagai model terbaik berdasarkan hasil evaluasi sebelumnya yang menunjukkan bahwa Random Forest memiliki nilai akurasi paling tinggi dibandingkan model lainnya. Model dibuat menggunakan parameter pertama`n_estimators=100` yang berarti model akan membangun 100 decision tree untuk meningkatkan performa klasifikasi. `random_state=42` digunakan agar hasil pelatihan model tetap konsisten setiap kali program dijalankan. `class_weight='balanced'` digunakan untuk menangani distribusi kelas yang tidak seimbang _(imbalanced dataset)_ sehingga model dapat memberikan perhatian yang lebih seimbang pada setiap kelas `quality`.
+
+Selanjutnya, model dilatih menggunakan seluruh data training yang telah melalui proses feature scaling dengan `scaler.transform(x)`. Penggunaan seluruh data training bertujuan agar model dapat mempelajari pola data secara maksimal sebelum digunakan untuk melakukan prediksi pada dataset testing.
+```python
+model_terbaik = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42,
+    class_weight='balanced'
+)
+
+model_terbaik.fit(scaler.transform(x), y)
+```
+Dengan proses ini, model Random Forest siap digunakan sebagai model final untuk memprediksi kualitas wine pada dataset testing.
+
+# 4. Prediksi Hasil
+Pada tahap ini dilakukan proses prediksi kualitas wine pada dataset testing menggunakan model terbaik, yaitu Random Forest. Model yang telah dilatih sebelumnya digunakan untuk memprediksi nilai `quality` berdasarkan fitur-fitur kimia pada data testing. Fungsi `predict()` digunakan untuk menghasilkan prediksi kualitas wine dari data testing yang telah melalui proses feature scaling `test_scaled`. Hasil prediksi kemudian disimpan dalam variabel `prediksi_quality`. Selanjutnya, dibuat sebuah DataFrame bernama `hasil_prediksi` yang berisi Kolom `Id` sebagai identitas data wine pada dataset testing dan kolom `quality` sebagai hasil prediksi kualitas wine dari model machine learning.
+```python
+prediksi_quality = model_terbaik.predict(test_scaled)
+
+hasil_prediksi = pd.DataFrame({
+    'Id': data_testing['Id'],
+    'quality': prediksi_quality
+})
+
+hasil_prediksi
+```
+
+Hasil Prediksi Quality Wine
+
+| No | Id   | quality |
+|----|------|----------|
+| 0  | 222  | 5 |
+| 1  | 1514 | 6 |
+| 2  | 417  | 5 |
+| 3  | 754  | 5 |
+| 4  | 516  | 5 |
+| ... | ... | ... |
+| 281 | 1147 | 6 |
+| 282 | 296  | 5 |
+| 283 | 170  | 5 |
+| 284 | 1439 | 6 |
+| 285 | 946  | 7 |
+
+Tabel di atas menunjukkan hasil prediksi kualitas wine pada dataset testing menggunakan model Random Forest. Kolom `quality` berisi hasil klasifikasi kualitas wine yang diprediksi berdasarkan pola yang telah dipelajari dari dataset training.
+
+# Menyimpan Hasil
+Pada tahap ini dilakukan penyimpanan hasil prediksi kualitas wine ke dalam file berformat CSV menggunakan fungsi `to_csv()` dari library `pandas`. File hasil prediksi disimpan dengan nama `hasilprediksi_007.csv`. File ini berisi kolom `Id` dan `quality`, yaitu identitas data wine serta hasil prediksi kualitas wine yang dihasilkan oleh model machine learning. Parameter `index=False` digunakan agar index bawaan dari `DataFrame` tidak ikut tersimpan ke dalam file CSV sehingga hasil file menjadi lebih rapi dan sesuai format yang dibutuhkan.
+```python
+hasil_prediksi.to_csv('hasilprediksi_007.csv', index=False)
+```
+
+# Insight dari Analisis
+Berdasarkan hasil analisis dan pengujian beberapa algoritma machine learning, diketahui bahwa kualitas wine dapat diprediksi menggunakan fitur-fitur kimia seperti `alcohol`, `pH`, `sulphates`, `volatile acidity`, dan fitur lainnya. Dataset yang digunakan memiliki distribusi kelas yang tidak seimbang, di mana kelas 5 dan 6 memiliki jumlah data paling banyak dibandingkan kelas lainnya. Hal ini memengaruhi performa beberapa model seperti Logistic Regression, KNN, dan SVM yang cenderung lebih baik dalam memprediksi kelas mayoritas dibandingkan kelas minoritas.
+
+Dari seluruh model yang diuji, algoritma berbasis pohon keputusan seperti Random Forest dan Decision Tree menunjukkan performa terbaik dibandingkan model lainnya. Random Forest berhasil memperoleh akurasi tertinggi sebesar sekitar 87%, yang menunjukkan bahwa model mampu mempelajari pola data dengan baik dan menghasilkan prediksi yang lebih stabil. Selain itu, confusion matrix menunjukkan bahwa sebagian besar data berhasil diklasifikasikan dengan benar, terutama pada kelas 5, 6, dan 7.
+
+# Kesimpulan
+Berdasarkan hasil analisis yang telah dilakukan, dapat disimpulkan bahwa proses klasifikasi kualitas wine berhasil dilakukan menggunakan beberapa algoritma machine learning seperti Logistic Regression, KNN, SVM, Random Forest, dan Decision Tree.
+
+Hasil evaluasi menunjukkan bahwa model Random Forest menjadi model terbaik dengan akurasi sekitar 87.21%, diikuti oleh Decision Tree dengan akurasi sekitar 85.47%. Sementara itu, model Logistic Regression, KNN, dan SVM memiliki performa yang lebih rendah karena kurang optimal dalam menangani distribusi data yang tidak seimbang.
+
+Model terbaik kemudian digunakan untuk memprediksi kualitas wine pada dataset testing dan hasil prediksi berhasil disimpan ke dalam file CSV. Dengan demikian, project ini berhasil membangun model machine learning yang mampu memprediksi kualitas wine secara otomatis berdasarkan karakteristik kimia yang dimiliki wine.
+
+# Rekomendasi
+Berdasarkan hasil project yang telah dilakukan, terdapat beberapa rekomendasi yang dapat dikembangkan pada penelitian atau project selanjutnya, yaitu:
+1. Melakukan penanganan imbalanced dataset menggunakan teknik seperti SMOTE atau oversampling agar model dapat memprediksi kelas minoritas dengan lebih baik.
+2. Melakukan hyperparameter tuning pada setiap algoritma machine learning untuk memperoleh performa model yang lebih optimal.
+3. Menambahkan proses feature selection atau feature engineering untuk mengetahui fitur yang paling berpengaruh terhadap kualitas wine.
+4. Menggunakan dataset dengan jumlah data yang lebih besar agar model dapat mempelajari pola data dengan lebih baik dan menghasilkan prediksi yang lebih akurat.
+5. Mengembangkan model ke dalam bentuk aplikasi atau deployment sehingga dapat digunakan secara langsung untuk memprediksi kualitas wine secara real-time.
